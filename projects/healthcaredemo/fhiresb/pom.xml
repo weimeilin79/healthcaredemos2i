@@ -67,7 +67,29 @@
      <releases>
       <enabled>true</enabled>
      </releases>
-    </repository>    
+    </repository> 
+    <repository>
+     <id>ga.redhat.com</id>
+     <name>RedHat GA repository</name>
+     <url>https://maven.repository.redhat.com/ga</url>
+     <snapshots>
+      <enabled>false</enabled>
+     </snapshots>
+     <releases>
+      <enabled>true</enabled>
+     </releases>
+    </repository> 
+    <repository>
+     <id>public.jboss.org</id>
+     <name>releasesJBoss releases repository</name>
+     <url>https://repository.jboss.org/nexus/content/repositories/public</url>
+     <snapshots>
+      <enabled>true</enabled>
+     </snapshots>
+     <releases>
+      <enabled>true</enabled>
+     </releases>
+    </repository>   
   </repositories>
 
   <pluginRepositories>
