@@ -58,7 +58,7 @@
           <hl7/>
         </marshal>
         <multicast>
-          <to uri="netty4:tcp://clinicservice?sync=true&amp;requestTimeout=5000&amp;decoder=#hl7decoder&amp;encoder=#hl7encoder"/>
+          <to uri="netty4:tcp://clinicservice:8889?sync=true&amp;requestTimeout=5000&amp;decoder=#hl7decoder&amp;encoder=#hl7encoder"/>
           <to uri="amq:queue:radiology"/>
           <to uri="amq:queue:LABREGMSG"/>
         </multicast>
