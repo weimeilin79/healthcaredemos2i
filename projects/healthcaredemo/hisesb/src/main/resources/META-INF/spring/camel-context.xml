@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <bean id="hl7encoder" class="org.apache.camel.component.hl7.HL7MLLPNettyEncoderFactory">
+    <property name="charset" value="iso-8859-1"/>
+    <property name="convertLFtoCR" value="true"/>
+   </bean>
+
+   <bean id="hl7decoder" class="org.apache.camel.component.hl7.HL7MLLPNettyDecoderFactory">
+    <property name="charset" value="iso-8859-1"/>
+    <property name="convertLFtoCR" value="true"/>
+   </bean>
+
+  <bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
+	<property name="userName" value="admin"/>
+	<property name="password" value="admin"/>
+  </bean>
+  <bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
+  
+  <!-- here is a sample which processes the input files
+         (leaving them in place - see the 'noop' flag)
+         then performs content based routing on the message using XPath --><!-- To Clinic application --><!-- To Lab machine 
+	  		<to uri="netty4:tcp://127.0.0.1:8081?sync=true&amp;requestTimeout=5000&amp;decoder=#hl7decoder&amp;encoder=#hl7encoder"/>
+	    	-->
+<!-- To Radiology system -->
+ <camelContext id="hisesbservice" xmlns="http://camel.apache.org/schema/spring">
+  <route id="transmitroute">
+    <from uri="amq:queue:msgtransmit"/>
+    <transform>
+      <simple>${body.replaceAll("&lt;", "&amp;lt;")}</simple>
+    </transform>
+    <transform>
+      <simple>${body.replaceAll("&gt;", "&amp;gt;")}</simple>
+    </transform>
+    <log message="${body}"/>
+    <to uri="websocket://demo?port=9123&amp;sendToAll=true"/>
+  </route>
+  
+  <route id="Handle ADT HL7 Messages">
+    <from uri="amq:queue:ADTMSG"/>
+    <wireTap uri="amq:queue:msgtransmit"/>
+    <unmarshal>
+      <hl7/>
+    </unmarshal>
+    <log message="Message body: ${body}" id="_log1"/>
+    <log message="Message Type: ${header.CamelHL7MessageType}"/>
+    <log message="Trigger Event: ${header.CamelHL7TriggerEvent}"/>
+    <choice>
+      <when>
+        <simple>${header.CamelHL7TriggerEvent} == 'A01'</simple>
+        <log message="A01"/>
+        <marshal>
+          <hl7/>
+        </marshal>
+        <multicast>
+          <to uri="netty4:tcp://clinicservice?sync=true&amp;requestTimeout=5000&amp;decoder=#hl7decoder&amp;encoder=#hl7encoder"/>
+          <to uri="amq:queue:radiology"/>
+          <to uri="amq:queue:LABREGMSG"/>
+        </multicast>
+        <setHeader headerName="CamelHttpMethod">
+          <constant>POST</constant>
+        </setHeader>
+      </when>
+      <otherwise>
+        <log message="DO NOTHING!"/>
+      </otherwise>
+    </choice>
+  </route>
+  
+  <route id="Handle Radiology HL7 Messages">
+    <from uri="amq:queue:RADIOMSG"/>
+    <wireTap uri="amq:queue:msgtransmit"/>
+    <to uri="amq:queue:radiologytest"/>
+  </route>
+</camelContext>
+  
+ 
+
+</beans>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+  <bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
+	<property name="userName" value="admin"/>
+	<property name="password" value="admin"/>
+  </bean>
+  <bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
+  
+  <camelContext id="RadiologyService"  xmlns="http://camel.apache.org/schema/spring">
+    <!-- here is a sample which processes the input files
+         (leaving them in place - see the 'noop' flag)
+         then performs content based routing on the message using XPath -->
+         
+    <route id="test">
+    	<from uri="amq:queue:radiologytest"/>
+    	<log message="${body}"/>
+    	<unmarshal>
+	      <hl7/>
+	  	</unmarshal>
+    	<setHeader headerName="testcontent">
+	      <terser>OBR-4-2</terser>
+        </setHeader>
+        <setHeader headerName="familyName">
+	      <terser>PID-5-1</terser>
+      	</setHeader>
+      	<setHeader headerName="firstName">
+	      <terser>PID-5-2</terser>
+      	</setHeader>
+      	<setBody>
+    	<simple>${header.firstName} ${header.familyName} has scheduled: ${header.testcontent}</simple>
+      </setBody>
+      <to uri="direct:displayinRadiologyconsole" />
+    </route>
+         
+    <route>
+      <from uri="amq:queue:radiology"/>
+      <log message="${body}"/>
+      <setHeader headerName="familyName">
+	      <terser>PID-5-1</terser>
+      </setHeader>
+      <setHeader headerName="firstName">
+	      <terser>PID-5-2</terser>
+      </setHeader>
+	  <log message="Family name: ${header.familyName}"/>
+	  <setBody>
+    	<simple>${header.firstName} ${header.familyName} admitted!</simple>
+      </setBody>
+      <to uri="direct:displayinRadiologyconsole"/>
+    </route>
+    
+    <route id="displayinRadiologyconsole">
+    	<from uri="direct:displayinRadiologyconsole" />
+    	<to uri="websocket://demo?port=9293&amp;sendToAll=true"/>
+    </route>
+  </camelContext>
+
+</beans>

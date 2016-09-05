@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+	
+  	<bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
+		<property name="userName" value="admin"/>
+		<property name="password" value="admin"/>
+	</bean>
+	<bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
+   
+
+   	<bean id="registryService" class="com.mycompany.camel.spring.RegistryService"/>
+   	<bean id="patientService" class="com.mycompany.camel.spring.PatientService"/>
+        
+  <camelContext id="context-692f290b-4a7d-4c49-990a-c1c8d7735e45" xmlns="http://camel.apache.org/schema/spring">
+   
+  
+  <route id="registryRequest">
+  	<from uri="amq:queue:HISMSG" />
+  	<log message="log firstname: ${headers.firstname}"/>
+  	<log message="log familyname: ${headers.familyname}"/>
+  	<log message="log hisid: ${headers.hisid}"/>
+  	<bean ref="patientService" method="getPatientInfo(${headers.firstname},${headers.familyname},${headers.hisid})"/>
+	<bean ref="registryService" method="registryPatient"/>
+  	<to uri="amq:queue:ADTMSG"/>
+  </route>
+  
+  <route id="hisDatabase">
+  	<from uri="amq:queue:ALLPATIENTS"/>
+  	<bean ref="patientService" method="getAllPatientsInTxt"/>
+  </route>
+</camelContext>
+
+</beans>

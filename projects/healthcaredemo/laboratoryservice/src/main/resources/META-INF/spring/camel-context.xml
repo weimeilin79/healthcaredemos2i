@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:fhir="http://hl7.org/fhir"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+ 
+  
+   <!--  <to uri="websocket://demo?host=localhost&amp;port=9294&amp;sendToAll=true"/>--><!--  <xpath resultType="java.lang.String">/Bundle/entry/resource/DiagnosticOrder/item/code/coding/display/@value</xpath> -->
+   <camelContext id="LabService" xmlns="http://camel.apache.org/schema/spring">
+  <restConfiguration component="jetty" port="8081" bindingMode="auto" enableCORS="true">
+    <corsHeaders key="Access-Control-Allow-Origin" value="*"/>
+    <corsHeaders key="Access-Control-Allow-Methods" value="GET"/>
+  </restConfiguration>
+  <rest path="/fhirLab">
+    <get uri="/registry/{hisid}">
+      <to uri="direct:doRegistry"/>
+    </get>
+    <post uri="/labtest/{hisid}/ordertest" consumes="application/xml">
+      <to uri="direct:ordertest"/>
+    </post>
+    <get uri="/labresult/{orderid}" >
+      <to uri="direct:returnlabresult"/>
+    </get>
+  </rest>
+  
+  <route>
+    <from uri="direct:doRegistry"/>
+    <setBody>
+      <simple>One Patient admitted</simple>
+    </setBody>
+    <to uri="direct:doTestDisplay"/>
+  </route>
+  
+  <route id="doTestDisplay">
+  	<from uri="direct:doTestDisplay"/>
+  	<to uri="websocket://demo?port=9294&amp;sendToAll=true"/>
+  </route>
+  
+  
+  <route id="ordertest">
+    <from uri="direct:ordertest"/>
+    <setHeader headerName="perscription">
+      <xpath resultType="String">/fhir:Bundle/fhir:entry/fhir:resource/fhir:DiagnosticOrder/fhir:item/fhir:code/fhir:coding/fhir:display/@value</xpath>
+    </setHeader>
+    <setBody>
+      <simple>Accept test : ${headers.perscription}</simple>
+    </setBody>
+	<to uri="direct:doTestDisplay"/>
+  </route>
+  
+ 
+</camelContext>
+
+</beans>

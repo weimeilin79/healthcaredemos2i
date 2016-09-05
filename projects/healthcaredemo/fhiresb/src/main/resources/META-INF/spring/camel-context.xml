@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
+		<property name="userName" value="admin"/>
+		<property name="password" value="admin"/>
+	</bean>
+	
+	<bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
+	
+	<bean id="hl7encoder" class="org.apache.camel.component.hl7.HL7MLLPNettyEncoderFactory">
+    	<property name="charset" value="iso-8859-1"/>
+    	<property name="convertLFtoCR" value="true"/>
+   	</bean>
+
+   	<bean id="hl7decoder" class="org.apache.camel.component.hl7.HL7MLLPNettyDecoderFactory">
+    	<property name="charset" value="iso-8859-1"/>
+    	<property name="convertLFtoCR" value="true"/>
+   	</bean>
+   
+   	
+  	<bean id="fhirConoverter" class="com.mycompany.camel.spring.FHIRConoverter" />
+  	<!-- here is a sample which processes the input files
+         (leaving them in place - see the 'noop' flag)
+         then performs content based routing on the message using XPath --><camelContext xmlns="http://camel.apache.org/schema/spring">
+  <route id="registerFHIR">
+    <from uri="amq:queue:LABREGMSG"/>
+    <log message="${body}"/>
+    <removeHeaders pattern="CamelHttp*"/>
+    <setHeader headerName="CamelHttpMethod">
+      <constant>GET</constant>
+    </setHeader>
+    <to uri="http4://laboratoryservice/fhirLab/registry/${headers.hisId}"/>
+  </route>
+  <route id="testingFHIR">
+    <from uri="amq:queue:LABTESTMSG"/>
+    <log message="Transform Body: ----&gt;${body}"/>
+    <setHeader headerName="familyName">
+      <terser>PID-5-1</terser>
+    </setHeader>
+    <setHeader headerName="firstName">
+      <terser>PID-5-2</terser>
+    </setHeader>
+    <setHeader headerName="hisId">
+      <terser>PID-10-4</terser>
+    </setHeader>
+    <setHeader headerName="testcontent">
+      <terser>OBR-4-2</terser>
+    </setHeader>
+    <bean ref="fhirConoverter" method="convertFHIRformat(${headers.firstName},${headers.familyName},${headers.hisId},${headers.testcontent})"/>
+    <wireTap uri="amq:queue:msgtransmit"/>
+    <removeHeaders pattern="CamelHttp*"/>
+    <setHeader headerName="CamelHttpMethod">
+      <constant>POST</constant>
+    </setHeader>
+    <to uri="http4://laboratoryservice/fhirLab/labtest/${headers.hisId}/ordertest"/>
+  </route>
+</camelContext>
+
+</beans>

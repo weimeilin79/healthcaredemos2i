@@ -1,0 +1,15 @@
+jaxb-core-2.2.11.jar
+spring-tx-3.2.12.RELEASE.jar
+log4j-1.2.17.jar
+spring-expression-4.1.6.RELEASE.jar
+slf4j-log4j12-1.7.7.jar
+spring-beans-3.2.12.RELEASE.jar
+commons-logging-1.1.3.jar
+jaxb-impl-2.2.11.jar
+spring-context-3.2.12.RELEASE.jar
+spring-aop-3.2.12.RELEASE.jar
+aopalliance-1.0.jar
+slf4j-api-1.7.7.jar
+spring-core-3.2.12.RELEASE.jar
+camel-core-2.15.1.redhat-621084.jar
+camel-spring-2.15.1.redhat-621084.jar

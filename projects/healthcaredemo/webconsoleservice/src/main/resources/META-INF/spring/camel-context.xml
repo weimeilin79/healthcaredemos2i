@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+	
+  	<bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
+		<property name="userName" value="admin"/>
+		<property name="password" value="admin"/>
+	</bean>
+	<bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
+      
+   	<camelContext id="context-692f290b-4a7d-4c49-990a-c1c8d7735e45" xmlns="http://camel.apache.org/schema/spring">
+	  <restConfiguration component="jetty" port="8080" bindingMode="auto" enableCORS="true" apiContextPath="api-docs">
+	  	<apiProperty key="host" value="0.0.0.0" />
+			<apiProperty key="cors" value="true" />
+	  	<apiProperty key="api.title" value="Healthcare demo clinical API" />
+	  	<apiProperty key="api.version" value="1.0.0" />
+	    <corsHeaders key="Access-Control-Allow-Origin" value="*"/>
+	    <corsHeaders key="Access-Control-Allow-Methods" value="GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, CONNECT, PATCH"/>
+	    <corsHeaders key="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
+	  </restConfiguration>
+  <rest path="/his">
+    <get uri="/registry/{firstname}/{familyname}/{hisid}">
+      <to uri="direct:registry"/>
+    </get>
+    <get uri="/allpatients">
+      <to uri="direct:allpatients"/>
+    </get>
+    <get uri="/dotest/{hisid}/{dept}/{testdetail}/{observation}">
+      <to uri="direct:dotest"/>
+    </get>
+    <get uri="/prescribe/{hisid}/{interval}/{prescription}">
+      <to uri="direct:prescribe"/>
+    </get>
+    <get uri="/pharmacy/{hisid}/">
+      <to uri="direct:pharmacy"/>
+    </get>
+  </rest>
+  <route id="doRegistryweb">
+    <from uri="direct:registry"/>
+    <log message="registry hisid: ${headers.hisid}"/>
+    <log message="registry firstname: ${headers.firstname}"/>
+    <log message="registry familyname: ${headers.familyname}"/>
+    <log message="body: ${body}"/>
+    <to uri="amq:queue:HISMSG"/>
+  </route>
+  <route id="doTestweb">
+    <from uri="direct:dotest"/>
+    <log message="diagnose hisid: ${headers.hisid}"/>
+    <to uri="amq:queue:DOTESTMSG"/>
+  </route>
+  <route id="doAllPatientsweb">
+    <from uri="direct:allpatients"/>
+    <log message="AllPatientsweb"/>
+    <to uri="amq:queue:ALLPATIENTS"/>
+  </route>
+  <route id="prescribeweb">
+    <from uri="direct:prescribe"/>
+    <log message="prescribe hisid: ${headers.hisid}"/>
+    <log message="diagnose interval: ${headers.interval}"/>
+    <log message="diagnose prescription: ${headers.prescription}"/>
+    <log message="body: ${body}"/>
+    <to uri="amq:queue:PRESCRIPTIONMSG"/>
+  </route>
+  <route id="pharmacyweb">
+    <from uri="direct:pharmacy"/>
+    <log message="prescribe hisid: ${headers.hisid}"/>
+    <to uri="activemq:queue:PHARMACYMSG"/>
+    <wireTap uri="amq:queue:msgtransmit"/>
+  </route>
+</camelContext>
+
+</beans>
