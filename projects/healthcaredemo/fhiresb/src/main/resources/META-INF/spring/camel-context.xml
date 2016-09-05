@@ -36,7 +36,7 @@
     <setHeader headerName="CamelHttpMethod">
       <constant>GET</constant>
     </setHeader>
-    <to uri="http4://laboratoryservice/fhirLab/registry/${headers.hisId}"/>
+    <to uri="http4://laboratoryservice:8081/fhirLab/registry/${headers.hisId}"/>
   </route>
   <route id="testingFHIR">
     <from uri="amq:queue:LABTESTMSG"/>
@@ -59,7 +59,7 @@
     <setHeader headerName="CamelHttpMethod">
       <constant>POST</constant>
     </setHeader>
-    <to uri="http4://laboratoryservice/fhirLab/labtest/${headers.hisId}/ordertest"/>
+    <to uri="http4://laboratoryservice:8081/fhirLab/labtest/${headers.hisId}/ordertest"/>
   </route>
 </camelContext>
 
