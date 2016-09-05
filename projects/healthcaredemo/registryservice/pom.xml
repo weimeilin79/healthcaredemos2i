@@ -10,6 +10,9 @@
   <name>Registry Service</name>
   
   <properties>
+  	
+  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
    
     <!-- http ports that are opened! -->
     <http.port>8080</http.port>
