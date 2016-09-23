@@ -63,13 +63,46 @@ Start build and deploying healthcare applications
     $ oc new-app -f support/registryservice.json
     $ oc new-app -f support/healthwebconsole.json
 
-Install GUI page and frontend for healthcare install 
-	
-		$ oc new-app --image-stream=openshift/php:5.5 --name=healthcareweb --code=https://github.com/weimeilin79/healthcareweb.git
+Expose all service to route.
+
+		$ oc expose svc clinicservice
+		$ oc expose svc fhiresb
+		$ oc expose svc healthwebconsole
+		$ oc expose svc hisesb
+		$ oc expose svc laboratoryservice
+		$ oc expose svc radiologyservice
+		$ oc expose svc registryservice
+
+Go to  https://github.com/weimeilin79/healthcareweb, clone it to your own repository
+And go to 'health.html' and update the urls to your exposed routes. 
+
+	 Replace all
+	 healthwebconsole-rhteapitemp.apps.ose.rhsummit.openshift.online 
+	 to 
+	 healthwebconsole-YOUR_OPENSHIFT_DOMAIN
+	 
+	 clinicservice-rhteapitemp.apps.ose.rhsummit.openshift.online
+	 to
+	 clinicservice-YOUR_OPENSHIFT_DOMAIN
+	 
+	 laboratoryservicews-rhteapitemp.apps.ose.rhsummit.openshift.online
+	 to
+	 laboratoryservicews-YOUR_OPENSHIFT_DOMAIN
+	 
+	 radiologyservice-rhteapitemp.apps.ose.rhsummit.openshift.online
+	 to
+	 radiologyservice-YOUR_OPENSHIFT_DOMAIN
+	 
+	 hisesb-rhteapitemp.apps.ose.rhsummit.openshift.online
+	 to
+	 hisesb-YOUR_OPENSHIFT_DOMAIN
+	 
+Deploy healthcareweb onto OpenShift
+		$ oc new-app --image-stream=openshift/php:5.5 --name=healthcareweb --code=https://github.com/YOURGITHUBACCOUNT/healthcareweb.git
 
 Install GUI page and frontend for healthcare install
 		
-		$ oc create -f support/healthwebroute.json                       
+		$ oc expose svc healthcareweb                       
 
 Finally, start playing with the demo by registering your info        
 
