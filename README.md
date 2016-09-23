@@ -98,6 +98,7 @@ And go to 'health.html' and update the urls to your exposed routes.
 	 hisesb-YOUR_OPENSHIFT_DOMAIN
 	 
 Deploy healthcareweb onto OpenShift
+		
 		$ oc new-app --image-stream=openshift/php:5.5 --name=healthcareweb --code=https://github.com/YOURGITHUBACCOUNT/healthcareweb.git
 
 Install GUI page and frontend for healthcare install
