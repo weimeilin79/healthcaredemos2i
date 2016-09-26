@@ -71,7 +71,6 @@ Expose all service to route.
 		$ oc expose svc hisesb
 		$ oc expose svc laboratoryservice
 		$ oc expose svc radiologyservice
-		$ oc expose svc registryservice
 
 Go to  https://github.com/weimeilin79/healthcareweb, clone it to your own repository
 And go to 'health.html' and update the urls to your exposed routes. 
